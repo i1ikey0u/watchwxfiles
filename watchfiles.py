@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: GBK -*-
 '''
-Create on 2016Äê9ÔÂ19ÈÕ
-FileNme £ºwatchfiles
+Create on 2016å¹´9æœˆ19æ—¥
+FileNme ï¼šwatchfiles
 @author:Shuichon
-doc docx pdf xls ppt µÈÎÄµµ¸ñÊ½»¯£¬¼à¿ØÖÆ¶¨ÎÄ¼ş¼Ğ£¬½«·ûºÏÖÆ¶¨¸ñÊ½µÄĞÂÎÄµµ¸´ÖÆµ½e:\wxÄ¿Â¼
-´´½¨Ò»¸öSqlLite3µÄÊı¾İ¿âÎÄ¼şË÷Òı,ÓÃÓÚ´æ´¢ÎÄ¼şMD5Öµ£¬ÊµÏÖ¿ìËÙËÑË÷¼°¶Ô±ÈÎÄ¼ş
+doc docx pdf xls ppt ç­‰æ–‡æ¡£æ ¼å¼åŒ–ï¼Œç›‘æ§åˆ¶å®šæ–‡ä»¶å¤¹ï¼Œå°†ç¬¦åˆåˆ¶å®šæ ¼å¼çš„æ–°æ–‡æ¡£å¤åˆ¶åˆ°e:\wxç›®å½•
+åˆ›å»ºä¸€ä¸ªSqlLite3çš„æ•°æ®åº“æ–‡ä»¶ç´¢å¼•,ç”¨äºå­˜å‚¨æ–‡ä»¶MD5å€¼ï¼Œå®ç°å¿«é€Ÿæœç´¢åŠå¯¹æ¯”æ–‡ä»¶
 '''
 import sqlite3,os,hashlib,shutil,sys,time
 
@@ -25,18 +25,19 @@ def scanFile(dir,dbname,shijian):
         print (f)
         if os.path.isfile(f):
             if os.path.getmtime(f)<shijian:
-                print ("·ûºÏÊ±¼ä")
-                if os.path.splitext(f)[1].lower() in ('.doc','.docx','.pdf','.pdfx','ppt','pptx','zip','rar','xls','xlsx'):
-                    print ("·ûºÏºó×º")
+                print ("ç¬¦åˆæ—¶é—´")
+                if os.path.splitext(f)[1].lower() in ('.doc','.docx','.pdf','.pdfx','.ppt','.pptx','.zip','.rar','.xls','.xlsx'):
+                    print ("ç¬¦åˆåç¼€")
                     md5s=GetFileMd5(f)
                     print (md5s)
                     cu.execute("select count() from files where filemd5=?;",(md5s,))
                     isnot =cu.fetchone()
                     print (isnot[0])
                     if isnot[0] ==0:
-                        print ("ĞÂÎÄ¼ş")
+                        print ("æ–°æ–‡ä»¶")
                         shutil.copy(f,dpth)
                         cu.execute("insert into files(filepath,filename,filemd5,filesize) values(?,?,?,?);",(dir, f, md5s,os.path.getsize(f)))
+                        conn.commit()
 
 
 def GetFileMd5(filename):
