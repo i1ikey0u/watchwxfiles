@@ -1,84 +1,101 @@
 #!/usr/bin/env python
 # -*- coding: GBK -*-
 '''
-Create on 2016å¹´9æœˆ19æ—¥
-FileNme ï¼šwatchfiles
+Create on 2016Äê9ÔÂ19ÈÕ
+FileNme £ºwatchfiles
 @author:Shuichon
-doc docx pdf xls ppt ç­‰æ–‡æ¡£æ ¼å¼åŒ–ï¼Œç›‘æ§åˆ¶å®šæ–‡ä»¶å¤¹ï¼Œå°†ç¬¦åˆåˆ¶å®šæ ¼å¼çš„æ–°æ–‡æ¡£å¤åˆ¶åˆ°e:\wxç›®å½•
-åˆ›å»ºä¸€ä¸ªSqlLite3çš„æ•°æ®åº“æ–‡ä»¶ç´¢å¼•,ç”¨äºå­˜å‚¨æ–‡ä»¶MD5å€¼ï¼Œå®ç°å¿«é€Ÿæœç´¢åŠå¯¹æ¯”æ–‡ä»¶
+doc docx pdf xls ppt µÈÎÄµµ¸ñÊ½»¯£¬¼à¿ØÖÆ¶¨ÎÄ¼ş¼Ğ£¬½«·ûºÏÖÆ¶¨¸ñÊ½µÄĞÂÎÄµµ¸´ÖÆµ½e:\wxÄ¿Â¼
+´´½¨Ò»¸öSqlLite3µÄÊı¾İ¿âÎÄ¼şË÷Òı,ÓÃÓÚ´æ´¢ÎÄ¼şMD5Öµ£¬ÊµÏÖ¿ìËÙËÑË÷¼°¶Ô±ÈÎÄ¼ş
 '''
-import sqlite3,os,hashlib,shutil,sys,time
+import sqlite3, os, hashlib, shutil, sys, time
+import tkinter as tk
+from tkinter import *
+from tkinter.filedialog import *
+from tkinter import messagebox
 
 def u(s, encoding):
-    if not s:
-        return s
-    if isinstance(s, unicode):
-        return s
-    else:
-        return unicode(s, encoding)
+	if not s:
+		return s
+	if isinstance(s, unicode):
+		return s
+	else:
+		return unicode(s, encoding)
 
-def scanFile(dir,dbname,shijian):
-    conn=sqlite3.connect(dbname)
-    cu=conn.cursor()
-    dpth="e:\wx"
-    for f in os.listdir(dir):
-        print (f)
-        if os.path.isfile(f):
-            if os.path.getmtime(f)<shijian:
-                print ("ç¬¦åˆæ—¶é—´")
-                if os.path.splitext(f)[1].lower() in ('.doc','.docx','.pdf','.pdfx','.ppt','.pptx','.zip','.rar','.xls','.xlsx'):
-                    print ("ç¬¦åˆåç¼€")
-                    md5s=GetFileMd5(f)
-                    print (md5s)
-                    cu.execute("select count() from files where filemd5=?;",(md5s,))
-                    isnot =cu.fetchone()
-                    print (isnot[0])
-                    if isnot[0] ==0:
-                        print ("æ–°æ–‡ä»¶")
-                        shutil.copy(f,dpth)
-                        cu.execute("insert into files(filepath,filename,filemd5,filesize) values(?,?,?,?);",(dir, f, md5s,os.path.getsize(f)))
-                        conn.commit()
+
+def scanFile(dir, dbname, shijian):
+	conn = sqlite3.connect(dbname)
+	cu = conn.cursor()
+	dpth = "e:\wx"
+	for f in os.listdir(dir):
+		print (f)
+		if os.path.isfile(f):
+			if os.path.getmtime(f) < shijian:
+				print ("·ûºÏÊ±¼ä")
+				if os.path.splitext(f)[1].lower() in (
+				'.doc', '.docx', '.pdf', '.pdfx', '.ppt', '.pptx', '.zip', '.rar', '.xls', '.xlsx'):
+					print ("·ûºÏºó×º")
+					md5s = GetFileMd5(f)
+					print (md5s)
+					cu.execute("select count() from files where filemd5=?;", (md5s,))
+					isnot = cu.fetchone()
+					print (isnot[0])
+					if isnot[0] == 0:
+						print ("ĞÂÎÄ¼ş")
+						shutil.copy(f, dpth)
+						cu.execute("insert into files(filepath,filename,filemd5,filesize) values(?,?,?,?);",
+						           (dir, f, md5s, os.path.getsize(f)))
+						conn.commit()
 
 
 def GetFileMd5(filename):
-    myhash = hashlib.md5()
-    f = open(filename,'rb')
-    while True:
-        b = f.read(8096)
-        if not b :
-            break
-        myhash.update(b)
-    f.close()
-    return myhash.hexdigest()
+	myhash = hashlib.md5()
+	f = open(filename, 'rb')
+	while True:
+		b = f.read(8096)
+		if not b:
+			break
+		myhash.update(b)
+	f.close()
+	return myhash.hexdigest()
+
 
 def CreateDB(sqliteName):
+	conn = sqlite3.connect(sqliteName)
 
-    conn = sqlite3.connect(sqliteName)
+	conn.text_factory = str
 
-    conn.text_factory = str
+	cu = conn.cursor()
 
-    cu = conn.cursor()
+	sql = "create table IF NOT EXISTS files(filepath varchar(400),filename varchar(200),filemd5 varchar(40),filesize varchar(100));"
+	cu.execute(sql)
 
-    sql = "create table IF NOT EXISTS files(filepath varchar(400),filename varchar(200),filemd5 varchar(40),filesize varchar(100));"
-    cu.execute(sql)
+	sql = "create index IF NOT EXISTS files_filepath  on  files(filepath);"
+	cu.execute(sql)
 
-    sql= "create index IF NOT EXISTS files_filepath  on  files(filepath);"
-    cu.execute(sql)
+	sql = "create index IF NOT EXISTS files_filename  on  files(filename);"
+	cu.execute(sql)
 
-    sql= "create index IF NOT EXISTS files_filename  on  files(filename);"
-    cu.execute(sql)
+	sql = "delete from files;"
+	cu.execute(sql)
+	conn.commit()
 
-    sql = "delete from files;"
-    cu.execute(sql)
-    conn.commit()
-        
+def start():
+	work_dir = os.getcwd()
+	sqliteName = os.path.join(work_dir, "files.db")
+	print("YOUR DB IS @ " + sqliteName)
+	CreateDB(sqliteName)
+	# ¶Ô»°¿òÑ¡ÔñÎÄ¼ş¼Ğ
+	path = askdirectory(parent=root, initialdir="/", title="ÇëÑ¡ÔñĞèÒª¼à¿ØµÄÎÄ¼ş¼Ğ!")
+	print("path",path)
+	while True:
+		shijian = time.ctime()
+		time.sleep(300)
+		print (shijian)
+		scanFile(path, sqliteName, shijian)
+
 if __name__ == "__main__":
-    work_dir=os.getcwd()
-    sqliteName=os.path.join(work_dir,"files.db")
-    print ("YOUR DB IS @ "+sqliteName)
-    CreateDB(sqliteName)
-    while True:
-        shijian = time.time()
-        time.sleep(300)
-        print (shijian)
-        scanFile(work_dir,sqliteName,shijian)
+	root = tk.Tk()
+	# withdraw()¿ÉÒÔÈÃ¶àÓàµÄ´°¿ÚÏûÊ§¡£Òş²ØÊÇ:withdraw()º¯Êı¡£ÖØĞÂÏÔÊ¾ÊÇ£ºupdate()ºÍdeiconify()º¯Êı¡£
+	# root.withdraw()
+	bt_start = tk.Button(root, text="¿ªÊ¼", command=start).pack()
+	root.mainloop()
