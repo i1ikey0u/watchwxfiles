@@ -8,10 +8,7 @@ doc docx pdf xls ppt 等文档格式化，监控制定文件夹，将符合制定格式的新文档复制到e
 创建一个SqlLite3的数据库文件索引,用于存储文件MD5值，实现快速搜索及对比文件
 '''
 import sqlite3, os, hashlib, shutil, sys, time
-import tkinter as tk
-from tkinter import *
-from tkinter.filedialog import *
-from tkinter import messagebox
+
 
 def u(s, encoding):
 	if not s:
@@ -22,29 +19,30 @@ def u(s, encoding):
 		return unicode(s, encoding)
 
 
-def scanFile(dir, dbname, shijian):
+def scanFile(dir, dbname, shijian, respth):
 	conn = sqlite3.connect(dbname)
 	cu = conn.cursor()
-	dpth = "e:\wx"
+	dpth = respth
 	for f in os.listdir(dir):
-		print (f)
+		print(f)
 		if os.path.isfile(f):
 			if os.path.getmtime(f) < shijian:
-				print ("符合时间")
+				print("符合时间")
 				if os.path.splitext(f)[1].lower() in (
 				'.doc', '.docx', '.pdf', '.pdfx', '.ppt', '.pptx', '.zip', '.rar', '.xls', '.xlsx'):
-					print ("符合后缀")
+					print("符合后缀")
 					md5s = GetFileMd5(f)
-					print (md5s)
-					cu.execute("select count() from files where filemd5=?;", (md5s,))
+					print(md5s)
+					cu.execute("SELECT count() FROM files WHERE filemd5=?;", (md5s,))
 					isnot = cu.fetchone()
-					print (isnot[0])
+					print(isnot[0])
 					if isnot[0] == 0:
-						print ("新文件")
+						print("新文件")
 						shutil.copy(f, dpth)
-						cu.execute("insert into files(filepath,filename,filemd5,filesize) values(?,?,?,?);",
+						cu.execute("INSERT INTO files(filepath,filename,filemd5,filesize) VALUES(?,?,?,?);",
 						           (dir, f, md5s, os.path.getsize(f)))
-						conn.commit()
+				conn.commit()
+			# cu.close()
 
 
 def GetFileMd5(filename):
@@ -79,23 +77,20 @@ def CreateDB(sqliteName):
 	cu.execute(sql)
 	conn.commit()
 
-def start():
+
+if __name__ == "__main__":
 	work_dir = os.getcwd()
 	sqliteName = os.path.join(work_dir, "files.db")
 	print("YOUR DB IS @ " + sqliteName)
 	CreateDB(sqliteName)
-	# 对话框选择文件夹
-	path = askdirectory(parent=root, initialdir="/", title="请选择需要监控的文件夹!")
-	print("path",path)
+	respth = "e:\shuichon"
+	if os.path.isdir(respth):
+		print("符合特征的文件将保存于：", respth)
+	else:
+		os.mkdir(respth)
+		print("符合特征的文件将保存于：", respth)
 	while True:
-		shijian = time.ctime()
+		shijian = time.time()
 		time.sleep(300)
-		print (shijian)
-		scanFile(path, sqliteName, shijian)
-
-if __name__ == "__main__":
-	root = tk.Tk()
-	# withdraw()可以让多余的窗口消失。隐藏是:withdraw()函数。重新显示是：update()和deiconify()函数。
-	# root.withdraw()
-	bt_start = tk.Button(root, text="开始", command=start).pack()
-	root.mainloop()
+		print(shijian)
+		scanFile(work_dir, sqliteName, shijian, respth)

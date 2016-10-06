@@ -22,11 +22,11 @@ def u(s, encoding):
 		return unicode(s, encoding)
 
 
-def scanFile(dir, dbname, shijian):
+def scanFile(dir, dbname, shijian ,respth):
 	conn = sqlite3.connect(dbname)
 	cu = conn.cursor()
-	#TODO 自动化完成结果目录的设置
-	dpth = "e:\shuichon"
+	dpth=respth
+
 	for f in os.listdir(dir):
 		print (f)
 		if os.path.isfile(f):
@@ -86,12 +86,19 @@ def start():
 	print("YOUR DB IS @ " + sqliteName)
 	CreateDB(sqliteName)
 	path = askdirectory(parent=root, initialdir="/", title="请选择需要监控的文件夹!")
-	print("path",path)
+	print("监控的目录为：", path)
+	respth = "e:\shuichon"
+	if os.path.isdir(respth):
+		print("符合特征的文件将保存于：", respth)
+	else:
+		os.mkdir(respth)
+		print("符合特征的文件将保存于：", respth)
 	while True:
 		shijian = time.ctime()
+		#设定循环时间，默认5min，300s
 		time.sleep(300)
 		print (shijian)
-		scanFile(path, sqliteName, shijian)
+		scanFile(path, sqliteName, shijian, respth)
 
 if __name__ == "__main__":
 	root = tk.Tk()
