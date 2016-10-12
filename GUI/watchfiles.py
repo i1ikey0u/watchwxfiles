@@ -29,23 +29,27 @@ def scanFile(dir, dbname, shijian ,respth):
 
 	for f in os.listdir(dir):
 		print (f)
-		if os.path.isfile(f):
-			if os.path.getmtime(f) < shijian:
+		fpth = os.path.join(dir,f)
+		if os.path.isfile(fpth):
+			# print (os.path.getmtime(f))
+			if os.path.getmtime(fpth) < shijian:
 				print ("符合时间")
-				if os.path.splitext(f)[1].lower() in (
+				if os.path.splitext(fpth)[1].lower() in (
 				'.doc', '.docx', '.pdf', '.pdfx', '.ppt', '.pptx', '.zip', '.rar', '.xls', '.xlsx'):
 					print ("符合后缀")
-					md5s = GetFileMd5(f)
+					md5s = GetFileMd5(fpth)
 					print (md5s)
 					cu.execute("select count() from files where filemd5=?;", (md5s,))
 					isnot = cu.fetchone()
 					print (isnot[0])
 					if isnot[0] == 0:
 						print ("新文件")
-						shutil.copy(f, dpth)
+						shutil.copy(fpth, dpth)
 						cu.execute("insert into files(filepath,filename,filemd5,filesize) values(?,?,?,?);",
-						           (dir, f, md5s, os.path.getsize(f)))
+						           (dir, f, md5s, os.path.getsize(fpth)))
 						conn.commit()
+		else:
+			print(f+"不是合法文件。")
 
 
 def GetFileMd5(filename):
@@ -83,7 +87,7 @@ def CreateDB(sqliteName):
 def start():
 	work_dir = os.getcwd()
 	sqliteName = os.path.join(work_dir, "files.db")
-	print("YOUR DB IS @ " + sqliteName)
+	print("文件信息数据库位于:" + sqliteName)
 	CreateDB(sqliteName)
 	path = askdirectory(parent=root, initialdir="/", title="请选择需要监控的文件夹!")
 	print("监控的目录为：", path)
@@ -94,10 +98,10 @@ def start():
 		os.mkdir(respth)
 		print("符合特征的文件将保存于：", respth)
 	while True:
-		shijian = time.ctime()
+		shijian = time.time()
 		#设定循环时间，默认5min，300s
-		time.sleep(300)
-		print (shijian)
+		time.sleep(30)
+		print ("本轮循环开始时间为：",shijian)
 		scanFile(path, sqliteName, shijian, respth)
 
 if __name__ == "__main__":
