@@ -14,12 +14,13 @@ from urllib import request, parse
 from bs4 import BeautifulSoup
 import re, json
 
-keyws = '胡说八道'
+keyws = '胡说八道' #调试参数
 nrurl = "http://weixin.sogou.com/weixin?type=2&query=" + parse.quote(keyws)
 gzhurl = "http://weixin.sogou.com/weixin?type=1&query=" + parse.quote(keyws)
 # print(gzhurl)
 cont_pref = 'http://mp.weixin.qq.com/'
 
+#该参数似乎未使用
 headers = {
 	'User-Agent': r'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) '
 	              r'Chrome/44.0.2454.85 Safari/537.36 115Browser/6.0.3',
@@ -126,9 +127,24 @@ def get_gzh_content_top10(gzh_url):
 
 	for i in range(len(jsonData['list'])):
 		inf_u = jsonData['list'][i]['app_msg_ext_info']['content_url']
-		#字符串内有异常字符，需要将&amp; 替换为&
+		# 字符串内有异常字符，需要将&amp; 替换为&
 		inf_u = inf_u.replace("&amp;", "&")
 		print('第 %d 篇的访问连接为：%s' % (i+1, inf_u))
+		# 调用函数，查看是否存在指定的关键字
+		grep_gzh(inf_u, "新材料")
+
+'''对文章中的关键字进行过滤，输出还有指定关键字的文章链接，或片段'''
+
+
+def grep_gzh(url, kws):
+	contents = request.urlopen(url).read().decode('utf-8')
+	# print(contents)
+	pat = re.compile(kws)
+	res = pat.findall(contents)
+	if res > 0:
+		print("发现 %i 处匹配的关键字" % res)
+	else:
+		print("未发现存在匹配的关键字")
 
 if __name__ == "__main__":
 	print("f*ck wechat !")

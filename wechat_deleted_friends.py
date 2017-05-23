@@ -1,10 +1,17 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+'''
+使用添加群组的方法，查看是否是好友
+有github仓库反馈即使你已被对方删除好友，依然可以拉对方入群
+经过我2017-05-15的测试，使用手机微信，如果对方未添加你为好友，现在还是可以使用的。
+'''
+
+from urllib import request, parse
 import os
-import urllib, urllib2
+# import urllib, urllib2
 import re
-import cookielib
+# import cookielib
 import time
 import xml.dom.minidom
 import json
@@ -13,7 +20,7 @@ import math
 
 DEBUG = False
 
-MAX_GROUP_NUM = 35 # ÿ������
+MAX_GROUP_NUM = 35  # 每个组人数
 
 QRImagePath = os.getcwd() + '/qrcode.jpg'
 
@@ -45,15 +52,14 @@ def getUUID():
 		'_': int(time.time()),
 	}
 
-	request = urllib2.Request(url = url, data = urllib.urlencode(params))
-	response = urllib2.urlopen(request)
-	data = response.read()
+	req = request.urlopen(url = url, data = params)
+	resp= req.read().decode('utf-8')
 
-	# print data
+	# print resp
 
 	# window.QRLogin.code = 200; window.QRLogin.uuid = "oZwt_bFfRg==";
 	regx = r'window.QRLogin.code = (\d+); window.QRLogin.uuid = "(\S+?)"'
-	pm = re.search(regx, data)
+	pm = re.search(regx, resp)
 
 	code = pm.group(1)
 	uuid = pm.group(2)
@@ -72,13 +78,13 @@ def showQRImage():
 		'_': int(time.time()),
 	}
 
-	request = urllib2.Request(url = url, data = urllib.urlencode(params))
-	response = urllib2.urlopen(request)
+	req = request.urlopen(url = url, data = params)
+	resp = req.read().decode('utf-8')
 
 	tip = 1
 
 	f = open(QRImagePath, 'wb')
-	f.write(response.read())
+	f.write(resp)
 	f.close()
 
 	if sys.platform.find('darwin') >= 0:
@@ -88,35 +94,32 @@ def showQRImage():
 	else:
 		os.system('call %s' % QRImagePath)
 
-	print '��ʹ��΢��ɨ���ά���Ե�¼'
+	print('请使用手机微信扫描二维码进行登录：')
 
 def waitForLogin():
 	global tip, base_uri, redirect_uri
 
 	url = 'https://login.weixin.qq.com/cgi-bin/mmwebwx-bin/login?tip=%s&uuid=%s&_=%s' % (tip, uuid, int(time.time()))
 
-	request = urllib2.Request(url = url)
-	response = urllib2.urlopen(request)
-	data = response.read()
-	
-	# print data
+	req = request.urlopen(url = url)
+	resp = req.read().decode('utf-8')
 
 	# window.code=500;
 	regx = r'window.code=(\d+);'
-	pm = re.search(regx, data)
+	pm = re.search(regx, resp)
 
 	code = pm.group(1)
 
-	if code == '201': #��ɨ��
-		print '�ɹ�ɨ��,�����ֻ��ϵ��ȷ���Ե�¼'
+	if code == '201':
+		print('状态201，成功扫描,请在手机上点击确认以登录。')
 		tip = 0
-	elif code == '200': #�ѵ�¼
-		print '���ڵ�¼...'
+	elif code == '200':
+		print('状态200，正在登录..')
 		regx = r'window.redirect_uri="(\S+?)";'
-		pm = re.search(regx, data)
+		pm = re.search(regx, resp)
 		redirect_uri = pm.group(1) + '&fun=new'
 		base_uri = redirect_uri[:redirect_uri.rfind('/')]
-	elif code == '408': #��ʱ
+	elif code == '408':
 		pass
 	# elif code == '400' or code == '500':
 
@@ -125,11 +128,8 @@ def waitForLogin():
 def login():
 	global skey, wxsid, wxuin, pass_ticket, BaseRequest
 
-	request = urllib2.Request(url = redirect_uri)
-	response = urllib2.urlopen(request)
-	data = response.read()
-
-	# print data
+	req = request.urlopen(url = redirect_uri)
+	resp = req.read().decode('utf-8')
 
 	'''
 		<error>
@@ -143,7 +143,7 @@ def login():
 		</error>
 	'''
 
-	doc = xml.dom.minidom.parseString(data)
+	doc = xml.dom.minidom.parseString(resp)
 	root = doc.documentElement
 
 	for node in root.childNodes:
@@ -177,14 +177,13 @@ def webwxinit():
 		'BaseRequest': BaseRequest
 	}
 
-	request = urllib2.Request(url = url, data = json.dumps(params))
+	req = request.urlopen(url = url, data = json.dumps(params))
 	request.add_header('ContentType', 'application/json; charset=UTF-8')
-	response = urllib2.urlopen(request)
-	data = response.read()
+	resp = req.read().decode('utf-8')
 
 	if DEBUG == True:
 		f = open(os.getcwd() + '/webwxinit.json', 'wb')
-		f.write(data)
+		f.write(resp)
 		f.close()
 
 	# print data
@@ -196,7 +195,7 @@ def webwxinit():
 
 	ErrMsg = dic['BaseResponse']['ErrMsg']
 	if len(ErrMsg) > 0:
-		print ErrMsg
+		print(ErrMsg)
 
 	Ret = dic['BaseResponse']['Ret']
 	if Ret != 0:
@@ -208,14 +207,13 @@ def webwxgetcontact():
 	
 	url = base_uri + '/webwxgetcontact?pass_ticket=%s&skey=%s&r=%s' % (pass_ticket, skey, int(time.time()))
 
-	request = urllib2.Request(url = url)
-	request.add_header('ContentType', 'application/json; charset=UTF-8')
-	response = urllib2.urlopen(request)
-	data = response.read()
+	req = request.urlopen(url = url)
+	req.add_header('ContentType', 'application/json; charset=UTF-8')
+	resp = req.read().decode('utf-8')
 
 	if DEBUG == True:
 		f = open(os.getcwd() + '/webwxgetcontact.json', 'wb')
-		f.write(data)
+		f.write(resp)
 		f.close()
 
 	# print data
@@ -223,9 +221,9 @@ def webwxgetcontact():
 	dic = json.loads(data)
 	MemberList = dic['MemberList']
 
-	# �������,��Ȼɾ����ʱ�������..
+	# 倒序遍历..
 	SpecialUsers = ['newsapp', 'fmessage', 'filehelper', 'weibo', 'qqmail', 'fmessage', 'tmessage', 'qmessage', 'qqsync', 'floatbottle', 'lbsapp', 'shakeapp', 'medianote', 'qqfriend', 'readerapp', 'blogapp', 'facebookapp', 'masssendapp', 'meishiapp', 'feedsapp', 'voip', 'blogappweixin', 'weixin', 'brandsessionholder', 'weixinreminder', 'wxid_novlwrv3lqwv11', 'gh_22b87fa7cb3c', 'officialaccounts', 'notification_messages', 'wxid_novlwrv3lqwv11', 'gh_22b87fa7cb3c', 'wxitil', 'userexperience_alarm', 'notification_messages']
-	for i in xrange(len(MemberList) - 1, -1, -1):
+	for i in range(len(MemberList) - 1, -1, -1):
 		Member = MemberList[i]
 		if Member['VerifyFlag'] & 8 != 0: # ���ں�/�����
 			MemberList.remove(Member)
@@ -252,14 +250,13 @@ def createChatroom(UserNames):
 		'Topic': '',
 	}
 
-	request = urllib2.Request(url = url, data = json.dumps(params))
-	request.add_header('ContentType', 'application/json; charset=UTF-8')
-	response = urllib2.urlopen(request)
-	data = response.read()
+	req = request.urlopen(url=url)
+	req.add_header('ContentType', 'application/json; charset=UTF-8')
+	resp = req.read().decode('utf-8')
 
 	# print data
 
-	dic = json.loads(data)
+	dic = json.loads(resp)
 	ChatRoomName = dic['ChatRoomName']
 	MemberList = dic['MemberList']
 	DeletedList = []
@@ -269,7 +266,7 @@ def createChatroom(UserNames):
 
 	ErrMsg = dic['BaseResponse']['ErrMsg']
 	if len(ErrMsg) > 0:
-		print ErrMsg
+		print(ErrMsg)
 
 	return (ChatRoomName, DeletedList)
 
@@ -281,17 +278,14 @@ def deleteMember(ChatRoomName, UserNames):
 		'DelMemberList': ','.join(UserNames),
 	}
 
-	request = urllib2.Request(url = url, data = json.dumps(params))
-	request.add_header('ContentType', 'application/json; charset=UTF-8')
-	response = urllib2.urlopen(request)
-	data = response.read()
+	req = request.urlopen(url=url)
+	req.add_header('ContentType', 'application/json; charset=UTF-8')
+	resp = req.read().decode('utf-8')
 
-	# print data
-
-	dic = json.loads(data)
+	dic = json.loads(resp)
 	ErrMsg = dic['BaseResponse']['ErrMsg']
 	if len(ErrMsg) > 0:
-		print ErrMsg
+		print(ErrMsg)
 
 	Ret = dic['BaseResponse']['Ret']
 	if Ret != 0:
@@ -307,14 +301,14 @@ def addMember(ChatRoomName, UserNames):
 		'AddMemberList': ','.join(UserNames),
 	}
 
-	request = urllib2.Request(url = url, data = json.dumps(params))
-	request.add_header('ContentType', 'application/json; charset=UTF-8')
-	response = urllib2.urlopen(request)
-	data = response.read()
+	req = request.urlopen(url = url, data = json.dumps(params))
+	req.add_header('ContentType', 'application/json; charset=UTF-8')
+	resp = req.read().decode('utf-8')
+
 
 	# print data
 
-	dic = json.loads(data)
+	dic = json.loads(resp)
 	MemberList = dic['MemberList']
 	DeletedList = []
 	for Member in MemberList:
@@ -323,17 +317,17 @@ def addMember(ChatRoomName, UserNames):
 
 	ErrMsg = dic['BaseResponse']['ErrMsg']
 	if len(ErrMsg) > 0:
-		print ErrMsg
+		print(ErrMsg)
 
 	return DeletedList
 
 def main():
 
-	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
-	urllib2.install_opener(opener)
-	
+	# opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
+	# urllib2.install_opener(opener)
+
 	if getUUID() == False:
-		print '��ȡuuidʧ��'
+		print('uuid error')
 		return
 
 	showQRImage()
@@ -345,25 +339,25 @@ def main():
 	os.remove(QRImagePath)
 
 	if login() == False:
-		print '��¼ʧ��'
+		print('login fail')
 		return
 
 	if webwxinit() == False:
-		print '��ʼ��ʧ��'
+		print('webwxinit fail')
 		return
 
 	MemberList = webwxgetcontact()
 
 	MemberCount = len(MemberList)
-	print 'ͨѶ¼��%sλ����' % MemberCount
+	print('membercount' % MemberCount)
 
 	ChatRoomName = ''
 	result = []
-	for i in xrange(0, int(math.ceil(MemberCount / float(MAX_GROUP_NUM)))):
+	for i in range(0, int(math.ceil(MemberCount / float(MAX_GROUP_NUM)))):
 		UserNames = []
 		NickNames = []
 		DeletedList = ''
-		for j in xrange(0, MAX_GROUP_NUM):
+		for j in range(0, MAX_GROUP_NUM):
 			if i * MAX_GROUP_NUM + j >= MemberCount:
 				break
 
@@ -371,12 +365,11 @@ def main():
 			UserNames.append(Member['UserName'])
 			NickNames.append(Member['NickName'].encode('utf-8'))
                         
-		print '��%s��...' % (i + 1)
-		print ', '.join(NickNames)
-		print '�س�������...'
-		raw_input()
+		print('��%s��...' % (i + 1))
+		print(', '.join(NickNames))
+		print('�س�������...')
+		input()
 
-		# �½�Ⱥ��/��ӳ�Ա
 		if ChatRoomName == '':
 			(ChatRoomName, DeletedList) = createChatroom(UserNames)
 		else:
@@ -386,13 +379,11 @@ def main():
 		if DeletedCount > 0:
 			result += DeletedList
 
-		print '�ҵ�%s����ɾ����' % DeletedCount
-		# raw_input()
+		print('test' % DeletedCount)
 
-		# ɾ����Ա
 		deleteMember(ChatRoomName, UserNames)
 
-	# todo ɾ��Ⱥ��
+	# todo
 
 
 	resultNames = []
@@ -403,9 +394,9 @@ def main():
 				NickName += '(%s)' % Member['RemarkName']
 			resultNames.append(NickName.encode('utf-8'))
 
-	print '---------- ��ɾ���ĺ����б� ----------'
-	print '\n'.join(resultNames)
-	print '-----------------------------------'
+	print('---------- ��ɾ���ĺ����б� ----------')
+	print('\n'.join(resultNames))
+	print('-----------------------------------')
 
 # windows�±��������޸�
 # http://blog.csdn.net/heyuxuanzee/article/details/8442718
@@ -426,11 +417,11 @@ if sys.stdout.encoding == 'cp936':
 
 if __name__ == '__main__' :
 
-	print '������Ĳ�ѯ������ܻ�����һЩ�����ϵĲ���,��С��ʹ��...'
-	print '�س�������...'
-	raw_input()
+	print('00')
+	print('01')
+	input()
 
 	main()
 
-	print '�س�������'
-	raw_input()
+	print('02')
+	input()
