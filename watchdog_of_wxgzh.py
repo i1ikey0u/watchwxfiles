@@ -4,8 +4,8 @@
 # code by shuichon
 
 '''
-V1.0，获取指定公众号，指定（关键字）的文章列表及内容
-已经完成根据指定的关键字，搜索公众号，并采集该公众号最近10篇历史文章。
+V1.0，获取指定公众号，指定（关键字）的文章列表
+根据指定的关键字，搜索公众号，并采集该公众号最近10篇历史文章。
 根据指定的关键字，从最近10篇历史文章中，寻找存在关键字的文章
 '''
 
@@ -92,10 +92,8 @@ def get_gzh_lists(keys, gzh_num=1):
 		page_num = gzh_num // 10 + 2
 	for m in range(1, page_num):
 		print('第 %i 页公众号列表：' % m)
-		# pages_url='http://weixin.sogou.com/weixin?query=%E8%83%A1%E8%AF%B4%E5%85%AB%E9%81%93&_sug_type_=&sut=6832&lkt=1%2C1493816955341%2C1493816955341&s_from=input&_sug_=y&type=1&sst0=1493816955443&page='+str(i)+'&ie=utf8&w=01019900&dr=1'
 		pages_url = "http://weixin.sogou.com/weixin?query=" + parse.quote(keys) + "&type=1&page=%s" % m
 		print("当前搜索URL为：", pages_url)
-		# list_page = request.Request(pages_url, headers)
 		cots = request.urlopen(pages_url).read().decode('utf-8')
 		print('当前公众号搜索结果页内容长度为：', len(cots))
 		# print(cots)
@@ -124,7 +122,6 @@ def get_gzh_lists(keys, gzh_num=1):
 
 
 def get_gzh_content_top10(gzh_url, kws='关键字'):
-	# 测试URL
 	infos = request.urlopen(gzh_url).read().decode('utf-8')
 	# print(infos)
 	# 返回的公众号文章列表为JS控制的JSON数据。所以需要获取json数据。
@@ -152,7 +149,7 @@ def get_gzh_content_top10(gzh_url, kws='关键字'):
 			inf_u = "http://mp.weixin.qq.com" + inf_u
 			# 调试参数，关闭显示
 			# print('第 %d 篇的访问连接为：%s' % (l+1, inf_u))
-			# 调用函数，查看是否存在指定的关键字，需要修改第二个参数
+			# 调用函数，查看是否存在指定的关键字
 			grep_gzh(inf_u, kws)
 
 '''对文章中的关键字进行过滤，输出含有指定关键字的文章链接'''
