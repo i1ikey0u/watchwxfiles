@@ -4,9 +4,10 @@
 # code by shuichon
 
 '''
-V1.0，获取指定公众号，指定（关键字）的文章列表
+V2.0，获取指定公众号，指定（关键字）的文章列表
 根据指定的关键字，搜索公众号，并采集该公众号最近10篇历史文章。
 根据指定的关键字，从最近10篇历史文章中，寻找存在关键字的文章
+TODO 多级参数菜单还有些小bug。
 '''
 
 from urllib import request, parse
@@ -175,19 +176,19 @@ if __name__ == "__main__":
 		if sys.argv[1].startswith('-'):
 			option = sys.argv[1][1:]
 			if option == 'v':
-				print('''version v1.0 by shuichon''')
+				print('''version v2.0 by shuichon''')
 			elif option == 'h':
 				print('''
-	    =================================================================
-	    | This program prints files to the standard output.             |
-	    | Any number of files can be specified.                         |
-	    | Options include:                                              |
-	    | -v         : The version number of the pychon script          |
-	    | -h         : Display this help                                |
-	    | -gzh       : 查找制定关键字的公众号,默认返回第一个                  |
-	    |     -gnum  : 可选参数,从结果中取gnum个公众号,进行内容识别,默认1      |
-	    | -kws       : 内容识别关键字，查找包含kws的公众号文章                |
-	    =================================================================
+	=================================================================
+	| This program prints files to the standard output.             |
+	| Any number of files can be specified.                         |
+	| Options include:                                              |
+	| -v         : The version number of the pychon script          |
+	| -h         : Display this help                                |
+	| -gzh       : 查找制定关键字的公众号,默认返回第一个                  |
+	|     -gnum  : 可选参数,从结果中取gnum个公众号,进行内容识别,默认1      |
+	| -kws       : 内容识别关键字，查找包含kws的公众号文章                |
+	=================================================================
 					''')
 			elif option == 'v':
 				print ('''version v1.0 by shuichon''')
