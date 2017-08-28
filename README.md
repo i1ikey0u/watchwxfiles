@@ -22,23 +22,28 @@ TODO 增加显示公众号文章标题的功能，公众号名称的功能
 
 ##使用说明：
 ------------
-显示当前版本信息:
+显示当前版本信息:<br> 
 python.exe ./watchdog_of_wxgzh.py -v
 
-显示帮助信息:
+显示帮助信息:<br> 
 python.exe ./watchdog_of_wxgzh.py -h
 
-以“测试”为关键字，搜索公众号，并返回搜索结果中的前5个公众号访问URL:
+以“测试”为关键字，搜索公众号，并返回搜索结果中的前5个公众号访问URL:<br> 
 python.exe ./watchdog_of_wxgzh.py -gzh 测试 -gnum 5
 
-以“测试”为关键字，搜索公众号，并返回第1个公众号的访问URL，以及该公众号前10篇文章中，包含“内容关键字”的文章访问URL:
+以“测试”为关键字，搜索公众号，并返回第1个公众号的访问URL，以及该公众号前10篇文章中，包含“内容关键字”的文章访问URL:<br> 
 python.exe ./watchdog_of_wxgzh.py -gzh 测试 -key 内容关键字
 
-搜索包含“内容关键字”的公众号，并返回结果中第1个公众号的访问URL及该公众号近10篇文章访问URL
+搜索包含“内容关键字”的公众号，并返回结果中第1个公众号的访问URL及该公众号近10篇文章访问URL<br> 
 python.exe ./watchdog_of_wxgzh.py -kws 内容关键字
 
-搜索包含“内容关键字”的公众号，并返回结果中5个公众号的访问URL及每个公众号近10篇文章访问URL
+搜索包含“内容关键字”的公众号，并返回结果中5个公众号的访问URL及每个公众号近10篇文章访问URL<br> 
 python.exe ./watchdog_of_wxgzh.py -kws 内容关键字 -gnum 5
+
+##Q&A：
+----------
+Q：运行脚本提示：TypeError: object of type 'NoneType' has no len()<br> 
+A：请手工复制“当前公众号访问URL:”下面的URL，在浏览器访问，会提示输入验证码，输入验证码即可解决。<br> 
 
 #2017年8月28日，情人节当然要“啪啪啪”敲代码了。
 ------------------------------------------------------------
@@ -54,6 +59,6 @@ python.exe ./watchdog_of_wxgzh.py -kws 内容关键字 -gnum 5
 GUI版本和CMD版本现在均无需手工创建目录。(2016-10-06 by shuichon)
 
 #关于 WECHAT-DELETED-FRIENDS.PY
-==================================
+
 从某个地方获取到的，放着好久了，不确定现在是否还可以用。
 等watchdog_of_wxgzh.py完成后，再回头看看。
